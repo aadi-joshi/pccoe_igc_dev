@@ -175,7 +175,7 @@ export function StrainChart({ baseline, optimised, blocks }: StrainChartProps) {
           letterSpacing="0.1em"
           fill="var(--color-danger)"
         >
-          38.5°C ISO 7933 LIMIT
+          38.5°C  SAFE LIMIT
         </text>
 
         {/* Unmanaged baseline */}
@@ -273,8 +273,8 @@ export function StrainChart({ baseline, optimised, blocks }: StrainChartProps) {
       </div>
 
       <figcaption className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 px-1">
-        <LegendItem color="var(--color-danger)" label="Unmanaged 09:00–17:00" />
-        <LegendItem color="var(--color-safe)" label="KAVACH schedule" />
+        <LegendItem color="var(--color-danger)" label="A normal 09:00–17:00 day" />
+        <LegendItem color="var(--color-safe)" label="The KAVACH schedule" />
         <span className="flex items-center gap-1.5 text-[11px] text-[var(--color-ink-faint)]">
           <svg width="20" height="6" aria-hidden>
             <line
@@ -288,7 +288,7 @@ export function StrainChart({ baseline, optimised, blocks }: StrainChartProps) {
               opacity={0.45}
             />
           </svg>
-          beyond ISO 7933 validity
+          past the point the model can predict
         </span>
       </figcaption>
     </figure>

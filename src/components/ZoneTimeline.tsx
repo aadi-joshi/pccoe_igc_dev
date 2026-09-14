@@ -58,7 +58,7 @@ export function ZoneTimeline({
           fontSize={9}
           fill="var(--color-ink-faint)"
         >
-          ZONE
+          DANGER
         </text>
 
         {visible.map((h) => {
@@ -109,7 +109,7 @@ export function ZoneTimeline({
           fontSize={9}
           fill="var(--color-ink-faint)"
         >
-          SHIFT
+          PLAN
         </text>
 
         {/* Baseline rail so the scheduled blocks read against the full day */}
@@ -184,7 +184,7 @@ export function ZoneTimeline({
             fontSize={10}
             fill="var(--color-danger)"
           >
-            no safe schedule at this work intensity
+            no safe hours today at this workload
           </text>
         )}
       </svg>

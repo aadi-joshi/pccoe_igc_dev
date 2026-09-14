@@ -3,7 +3,7 @@
 import type { Plan } from "@/lib/types";
 import { ledgerDelta } from "@/lib/plan";
 import { CORE_TEMP_LIMIT } from "@/lib/phs";
-import { Panel, Pill, Stat, formatClock, formatInr } from "./ui";
+import { Callout, Explain, Panel, Pill, Stat, formatClock, formatInr } from "./ui";
 
 /**
  * Downscaling transparency panel.
@@ -19,7 +19,14 @@ export function DownscalePanel({ plan }: { plan: Plan }) {
 
   return (
     <Panel
-      title="Site microclimate · downscaling"
+      step={2}
+      title="How hot will this site actually get?"
+      subtitle={
+        <>
+          The nearest weather station is kilometres away. This is how we{" "}
+          <Explain term="downscaling">estimate conditions at the site itself</Explain>.
+        </>
+      }
       aside={
         <span className="tnum text-[11px] text-[var(--color-ink-muted)]">
           {d.anchorComparable
@@ -30,45 +37,53 @@ export function DownscalePanel({ plan }: { plan: Plan }) {
     >
       <div className="grid grid-cols-3 gap-4 border-b border-[var(--color-rule)] px-3.5 py-3.5">
         <Stat
-          label="Station reads"
+          label="Nearest station"
+          term="shram"
           value={d.anchorComparable ? d.stationTempC.toFixed(1) : "—"}
           unit={d.anchorComparable ? "°C" : undefined}
           note={
             d.anchorComparable
-              ? "SHRAM observation"
-              : "not concurrent with this day"
+              ? "what the real weather station measures"
+              : "not from the same day as this forecast"
           }
         />
         <Stat
-          label="Site estimate"
+          label="This site"
           value={d.siteTempC.toFixed(1)}
           unit="°C"
-          note="15:00, downscaled"
+          note="our estimate for 15:00"
         />
         {/* The station-versus-site divergence is only meaningful when both
             describe the same moment. On the historical scenario day it would
             be a difference in date, so we show the land-cover effect instead. */}
         {d.anchorComparable ? (
           <Stat
-            label="Divergence"
+            label="The gap"
+            term="uhi"
             value={`${d.deltaVsStationC >= 0 ? "+" : "−"}${Math.abs(d.deltaVsStationC).toFixed(1)}`}
             unit="°C"
             tone={d.deltaVsStationC >= 1.5 ? "danger" : "default"}
-            note="site vs station"
+            note="hotter than the station suggests"
           />
         ) : (
           <Stat
-            label="Land-cover effect"
+            label="Effect of the ground"
+            term="uhi"
             value={`${d.uhiDeltaC >= 0 ? "+" : "−"}${Math.abs(d.uhiDeltaC).toFixed(1)}`}
             unit="°C"
             tone={d.uhiDeltaC >= 1.5 ? "danger" : "default"}
-            note="vs open ground"
+            note="compared with open, green land"
           />
         )}
       </div>
 
       <div className="px-3.5 py-3">
-        <div className="label mb-2.5">Term breakdown</div>
+        <div className="label mb-1">Where that number comes from</div>
+        <p className="mb-2.5 text-[11.5px] leading-relaxed text-[var(--color-ink-muted)]">
+          A forecast for this spot, then a{" "}
+          <Explain term="biasCorrection">live accuracy check</Explain>, then what the
+          ground itself does. Bars to the right make the site hotter; left, cooler.
+        </p>
         <ul className="space-y-[7px]">
           <li className="flex items-baseline justify-between gap-3">
             <span className="text-[12px]">Gridded forecast at site</span>
@@ -117,12 +132,15 @@ export function DownscalePanel({ plan }: { plan: Plan }) {
           })}
         </ul>
 
-        <p className="mt-3 border-t border-[var(--color-rule)] pt-2.5 text-[10.5px] leading-relaxed text-[var(--color-ink-muted)]">
-          Terms 1 and 2 are live data and standard MOS bias correction. The land-cover
-          terms are parametric, with coefficients from published Indian urban heat island
-          studies — not a trained model, because no site-level ground truth exists to train
-          on. A learned residual drops into exactly this slot when it does.
-        </p>
+        <div className="mt-3.5">
+          <Callout title="What we are less sure about">
+            The first two rows are live data and a standard correction. The ground-cover
+            rows use published figures from Indian{" "}
+            <Explain term="uhi">urban heat island</Explain> studies rather than a model
+            trained on real site measurements — because no such measurements exist yet. We
+            would rather say that than show you an accuracy score we made up.
+          </Callout>
+        </div>
       </div>
     </Panel>
   );
@@ -142,21 +160,30 @@ export function LedgerPanel({ plan }: { plan: Plan }) {
   const gain = delta.deltaHours >= 0;
 
   return (
-    <Panel title="Productivity ledger">
+    <Panel
+      step={4}
+      title="Is the safer plan actually worse for business?"
+      subtitle={
+        <>
+          Usually not. Hours worked in dangerous heat produce very little, so{" "}
+          <Explain term="effectiveHours">real work delivered</Explain> often goes up, not
+          down.
+        </>
+      }
+    >
       <div className="grid grid-cols-1 sm:grid-cols-2">
         <Column
-          heading="Unmanaged"
-          sub="09:00–17:00, worked through"
+          heading="A normal day"
+          sub="09:00–17:00, worked straight through"
           hours={base.ledger.effectiveLabourHours}
           scheduled={base.ledger.scheduledHours}
           peak={base.strain.peakCoreTempC}
           breach={base.strain.breachAtClock}
           sop={base.ledger.sopCompliant}
           value={base.ledger.effectiveWageValueInr}
-          tone="danger"
         />
         <Column
-          heading="KAVACH"
+          heading="With KAVACH"
           sub={
             plan.blocks.length
               ? plan.blocks
@@ -170,7 +197,6 @@ export function LedgerPanel({ plan }: { plan: Plan }) {
           breach={opt.strain.breachAtClock}
           sop={opt.ledger.sopCompliant}
           value={opt.ledger.effectiveWageValueInr}
-          tone="safe"
           bordered
         />
       </div>
@@ -185,16 +211,16 @@ export function LedgerPanel({ plan }: { plan: Plan }) {
             {gain ? "+" : "−"}
             {Math.abs(delta.deltaHours).toFixed(0)} h
           </span>
-          <span className="tnum text-[13px] text-[var(--color-ink-muted)]">
-            {gain ? "+" : "−"}
-            {Math.abs(delta.deltaPct).toFixed(0)}% effective labour
+          <span className="text-[13px] text-[var(--color-ink-muted)]">
+            {gain ? "more" : "less"} real work —{" "}
+            <span className="tnum">{Math.abs(delta.deltaPct).toFixed(0)}%</span>
           </span>
           <span className="tnum text-[13px] text-[var(--color-ink-muted)]">
             {formatInr(delta.deltaWageInr)} /day
           </span>
           <span className="ml-auto">
             <Pill tone={base.ledger.breaches > opt.ledger.breaches ? "ok" : "neutral"}>
-              {base.ledger.breaches - opt.ledger.breaches} fewer breaches
+              {base.ledger.breaches - opt.ledger.breaches} fewer safety limits crossed
             </Pill>
           </span>
         </div>
@@ -229,7 +255,6 @@ function Column({
   breach,
   sop,
   value,
-  tone,
   bordered,
 }: {
   heading: string;
@@ -240,7 +265,6 @@ function Column({
   breach: number | null;
   sop: boolean;
   value: number;
-  tone: "danger" | "safe";
   bordered?: boolean;
 }) {
   return (
@@ -256,27 +280,33 @@ function Column({
 
       <div className="grid grid-cols-2 gap-3">
         <Stat
-          label="Effective labour"
+          label="Real work done"
+          term="effectiveHours"
           value={hours.toFixed(0)}
           unit="h"
           size="lg"
-          note={`${scheduled.toFixed(1)} h scheduled`}
+          note={`from ${scheduled.toFixed(1)} h on site`}
         />
         <Stat
-          label="Peak core temp"
+          label="Hottest body temp"
+          term="coreTemp"
           value={peak.toFixed(2)}
           unit="°C"
           size="lg"
           tone={peak >= CORE_TEMP_LIMIT ? "danger" : "safe"}
-          note={breach !== null ? `breach ${formatClock(breach)}` : "within limit"}
+          note={
+            breach !== null
+              ? `crosses the limit at ${formatClock(breach)}`
+              : "stays under the safe limit"
+          }
         />
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        <Pill tone={sop ? "ok" : "warn"}>{sop ? "SOP compliant" : "outside SOP"}</Pill>
-        <Pill tone={tone === "safe" ? "neutral" : "neutral"}>
-          {formatInr(value)} labour value
+      <div className="mt-3.5 flex flex-wrap items-center gap-1.5">
+        <Pill tone={sop ? "ok" : "warn"}>
+          {sop ? "Follows the legal rule" : "Outside the legal rule"}
         </Pill>
+        <Pill>{formatInr(value)} of labour</Pill>
       </div>
     </div>
   );

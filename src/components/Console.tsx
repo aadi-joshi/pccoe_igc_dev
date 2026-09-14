@@ -10,7 +10,9 @@ import { ZoneTimeline } from "./ZoneTimeline";
 import { StationMap } from "./StationMap";
 import { DownscalePanel, LedgerPanel } from "./panels";
 import { BriefingPanel } from "./BriefingPanel";
-import { Panel, Pill, Segmented, Stat, ZoneChip } from "./ui";
+import { Callout, Explain, Panel, Pill, Segmented, Stat, ZoneChip } from "./ui";
+import { Verdict } from "./Verdict";
+import { Intro } from "./Intro";
 
 export function Console({ initial }: { initial: ConsoleData }) {
   const [data, setData] = useState(initial);
@@ -91,7 +93,10 @@ export function Console({ initial }: { initial: ConsoleData }) {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-px bg-[var(--color-rule)] lg:grid-cols-[300px_1fr]">
         {/* ---------------- Left rail ---------------- */}
         <aside className="bg-[var(--color-paper)] px-4 py-5 lg:px-5">
-          <div className="label mb-3">Registered sites</div>
+          <div className="label mb-1.5">Step 1 · choose a site</div>
+          <p className="mb-3 text-[11.5px] leading-relaxed text-[var(--color-ink-muted)]">
+            Three real Pune work sites.
+          </p>
           <ul className="mb-6 space-y-px">
             {SITES.map((s) => {
               const active = s.id === siteId;
@@ -119,7 +124,11 @@ export function Console({ initial }: { initial: ConsoleData }) {
             })}
           </ul>
 
-          <div className="label mb-2.5">District view</div>
+          <div className="label mb-1.5">Where they are</div>
+          <p className="mb-2.5 text-[11.5px] leading-relaxed text-[var(--color-ink-muted)]">
+            Diamonds are work sites. Dots are{" "}
+            <Explain term="shram">SHRAM</Explain> weather stations, coloured by danger.
+          </p>
           <div className="mb-5 border border-[var(--color-rule)]">
             <StationMap
               stations={localStations}
@@ -156,6 +165,8 @@ export function Console({ initial }: { initial: ConsoleData }) {
             </div>
           </div>
 
+          <Intro />
+
           <Controls
             metLevel={metLevel}
             exposure={exposure}
@@ -165,14 +176,26 @@ export function Console({ initial }: { initial: ConsoleData }) {
           />
 
           {error && (
-            <p className="mb-4 border border-[var(--color-danger)] px-3 py-2 text-[12px] text-[var(--color-danger)]">
+            <p className="mb-4 rounded-[10px] border border-[var(--color-danger)] bg-[var(--color-danger-tint)] px-3.5 py-2.5 text-[12.5px] text-[var(--color-danger)]">
               {error}
             </p>
           )}
 
           <div className={pending ? "opacity-60 transition-opacity" : "transition-opacity"}>
+            <Verdict plan={plan} />
+
             <Panel
-              title="Predicted heat strain · ISO 7933"
+              step={3}
+              title="What would today do to a worker's body?"
+              subtitle={
+                <>
+                  The line below is a prediction of{" "}
+                  <Explain term="coreTemp">core body temperature</Explain> through the day,
+                  calculated minute by minute using{" "}
+                  <Explain term="iso7933">ISO 7933</Explain>. Red is an ordinary shift
+                  worked through the heat. Teal is the KAVACH schedule.
+                </>
+              }
               className="mb-4"
               aside={
                 <span className="tnum text-[11px] text-[var(--color-ink-muted)]">
@@ -196,7 +219,8 @@ export function Console({ initial }: { initial: ConsoleData }) {
               </div>
               <div className="grid grid-cols-2 gap-4 border-t border-[var(--color-rule)] px-3.5 py-3.5 sm:grid-cols-4">
                 <Stat
-                  label="Time to limit"
+                  label="Safe working time"
+                  term="unmanaged"
                   value={
                     plan.baseline.strain.dLimCoreMin !== null
                       ? `${plan.baseline.strain.dLimCoreMin}`
@@ -204,42 +228,50 @@ export function Console({ initial }: { initial: ConsoleData }) {
                   }
                   unit={plan.baseline.strain.dLimCoreMin !== null ? "min" : undefined}
                   tone={plan.baseline.strain.dLimCoreMin !== null ? "danger" : "safe"}
-                  note="unmanaged shift"
+                  note="before an ordinary shift becomes dangerous"
                 />
                 <Stat
-                  label="Peak core temp"
+                  label="Hottest the body gets"
+                  term="coreTemp"
                   value={plan.optimised.strain.peakCoreTempC.toFixed(2)}
                   unit="°C"
                   tone={plan.optimised.strain.safe ? "safe" : "danger"}
-                  note="KAVACH schedule"
+                  note={
+                    plan.optimised.strain.safe
+                      ? "on the KAVACH schedule — under the 38.5 limit"
+                      : "on the KAVACH schedule — still over the limit"
+                  }
                 />
                 <Stat
-                  label="Sweat loss"
+                  label="Water needed"
+                  term="sweatLoss"
                   value={plan.optimised.strain.totalWaterLossL.toFixed(2)}
                   unit="L"
-                  note="water to provide per worker"
+                  note="per worker, for the whole shift"
                 />
                 <Stat
-                  label="Rest cadence"
+                  label="Work per hour"
+                  term="cadence"
                   value={peakMeta.workFraction * 100}
-                  unit="% work"
+                  unit="%"
                   note={peakMeta.cadence}
                 />
               </div>
             </Panel>
 
             {plan.notes.length > 0 && (
-              <ul className="mb-4 space-y-1.5">
-                {plan.notes.map((n, i) => (
-                  <li
-                    key={i}
-                    className="flex gap-2.5 border-l-2 border-[var(--color-rule-strong)] bg-[var(--color-paper-raised)] px-3 py-2 text-[12px] leading-relaxed"
-                  >
-                    <span className="label mt-[3px] shrink-0">note</span>
-                    <span>{n}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="mb-4">
+                <Callout title="Things worth knowing about this plan">
+                  <ul className="space-y-1.5">
+                    {plan.notes.map((n, i) => (
+                      <li key={i} className="flex gap-2">
+                        <span aria-hidden className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-[var(--color-ink-faint)]" />
+                        <span>{n}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Callout>
+              </div>
             )}
 
             <div className="mb-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -276,22 +308,22 @@ function Header({
           <span className="font-[family-name:var(--font-display)] text-[21px] font-semibold tracking-[0.06em]">
             KAVACH
           </span>
-          <span className="hidden text-[12px] text-[var(--color-ink-muted)] sm:inline">
-            Occupational Heat Decision Engine
+          <span className="hidden text-[12.5px] text-[var(--color-ink-muted)] sm:inline">
+            Can this crew work outdoors today?
           </span>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <Segmented
-            label="Conditions"
+            label="Weather to plan against"
             value={scenario as "live" | "heatwave"}
             onChange={onScenario}
             options={[
-              { value: "live", label: "Live", title: "Live SHRAM feed + 72h forecast" },
+              { value: "live", label: "Today", title: "Live SHRAM readings plus the 72-hour forecast" },
               {
                 value: "heatwave",
-                label: "May heatwave",
-                title: "Recorded peak-summer day (archive data, not synthetic)",
+                label: "A May heatwave",
+                title: "A real recorded peak-summer day, not invented data",
               },
             ]}
           />
@@ -305,7 +337,7 @@ function Header({
                   : "var(--color-safe)",
               }}
             />
-            {meta.stale ? "cached feed" : "live feed"} · {meta.totalStations} stations
+            {meta.stale ? "saved copy" : "live data"} · {meta.totalStations} stations
           </Pill>
         </div>
       </div>
@@ -327,31 +359,47 @@ function Controls({
   pending: boolean;
 }) {
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-3 border-y border-[var(--color-rule)] py-3">
-      <Segmented
-        label="Work intensity"
-        value={metLevel}
-        onChange={onMet}
-        disabled={pending}
-        options={([3, 4, 5, 6] as MetLevel[]).map((m) => ({
-          value: m,
-          label: `MET ${m}`,
-          title: MET_LABEL[m],
-        }))}
-      />
-      <Segmented
-        label="Exposure"
-        value={exposure}
-        onChange={onExposure}
-        disabled={pending}
-        options={[
-          { value: "sun" as SunExposure, label: "Sun" },
-          { value: "shade" as SunExposure, label: "Shade" },
-        ]}
-      />
-      <span className="tnum text-[11px] text-[var(--color-ink-faint)]">
-        {pending ? "recomputing…" : "changes re-run the ISO 7933 model"}
-      </span>
+    <div className="mb-5 rounded-[12px] border border-[var(--color-rule)] bg-[var(--color-paper-raised)] px-4 py-3.5">
+      <p className="mb-3 text-[12.5px] leading-relaxed text-[var(--color-ink-muted)]">
+        <span className="font-semibold text-[var(--color-ink)]">Try changing these.</span>{" "}
+        Everything on this page is recalculated from scratch — the whole plan, not a
+        lookup. Dropping the work intensity is usually what turns an impossible day into a
+        workable one.
+      </p>
+      <div className="flex flex-wrap items-start gap-x-7 gap-y-4">
+        <Segmented
+          label={<Explain term="met">How hard is the work?</Explain>}
+          value={metLevel}
+          onChange={onMet}
+          disabled={pending}
+          hint={MET_LABEL[metLevel]}
+          options={([3, 4, 5, 6] as MetLevel[]).map((m) => ({
+            value: m,
+            label: `MET ${m}`,
+            title: MET_LABEL[m],
+          }))}
+        />
+        <Segmented
+          label="Are they in the sun?"
+          value={exposure}
+          onChange={onExposure}
+          disabled={pending}
+          hint={
+            exposure === "sun"
+              ? "Direct sun — full solar load on the body"
+              : "Shaded — far less radiant heat"
+          }
+          options={[
+            { value: "sun" as SunExposure, label: "Direct sun" },
+            { value: "shade" as SunExposure, label: "Shade" },
+          ]}
+        />
+        {pending && (
+          <span className="self-center text-[12px] text-[var(--color-ink-faint)]">
+            recalculating…
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -359,17 +407,22 @@ function Controls({
 function ZoneLegend() {
   return (
     <div>
-      <div className="label mb-2.5">Heat stress zones</div>
-      <ul className="space-y-[3px]">
+      <div className="label mb-1.5">
+        <Explain term="zone">What the colours mean</Explain>
+      </div>
+      <p className="mb-2.5 text-[11.5px] leading-relaxed text-[var(--color-ink-muted)]">
+        Danger rating 1 to 6, and how much of each hour can actually be worked.
+      </p>
+      <ul className="space-y-[5px]">
         {([1, 2, 3, 4, 5, 6] as const).map((z) => (
           <li key={z} className="flex items-center gap-2">
             <span
               aria-hidden
-              className="inline-block h-2.5 w-2.5 shrink-0 rounded-[1px]"
+              className="inline-block h-3 w-3 shrink-0 rounded-[3px]"
               style={{ background: ZONES[z].colorVar }}
             />
-            <span className="tnum w-3 text-[10.5px] text-[var(--color-ink-muted)]">{z}</span>
-            <span className="truncate text-[11px] text-[var(--color-ink-muted)]">
+            <span className="tnum w-3 text-[11px] text-[var(--color-ink-muted)]">{z}</span>
+            <span className="truncate text-[11.5px] text-[var(--color-ink-muted)]">
               {ZONES[z].cadence}
             </span>
           </li>
