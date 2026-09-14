@@ -1,1 +1,22 @@
-\dev
+node_modules/
+.next/
+out/
+build/
+dist/
+.env
+.env*.local
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+npm-debug.log*
+.cache/
+coverage/
+
+# working notes, not part of the project
+md/
+../md/
