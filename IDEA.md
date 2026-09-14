@@ -62,8 +62,16 @@ Not "Zone 5, avoid exertion." Instead:
 > inside Maharashtra SOP, and yields **105 effective labour-hours**.*
 > *Safer **and** 3× the usable labour.*
 
-Those are figures the engine actually produces, not illustrations — reproduce them with
-`npx tsx scripts/demo-numbers.ts`.
+Those are figures the engine actually produces, not illustrations. Reproduce them exactly with
+`npx tsx scripts/demo-numbers.ts`, which runs against the bundled station snapshot.
+
+**Expect the live numbers to differ, and say so before a judge notices.** The EHI response
+surface is refit from the feed on every request, so a run against live SHRAM data on a
+different day gives different absolute values — on the September feed the same MET 4 case
+reads 53 → 95 effective hours rather than 32 → 105. The *direction* is stable across both:
+a large gain at moderate intensity, an honest loss at MET 6. Quoting a frozen snapshot for
+reproducibility and flagging that live values move is the defensible position; quoting one
+number as though it were fixed is not.
 
 That comparison is the adoption thesis. Safety advice gets ignored; output does not.
 
@@ -72,7 +80,7 @@ That comparison is the adoption thesis. Safety advice gets ignored; output does 
 At the very highest work intensity the trade-off reverses, and the product reports it
 plainly rather than hiding it. Same site, same day, at MET 6 (sustained very heavy labour):
 
-| | Unmanaged 09:00–17:00 | KAVACH |
+| (bundled snapshot) | Unmanaged 09:00–17:00 | KAVACH |
 |---|---|---|
 | Effective labour | 53 h | **37 h** |
 | Peak core temperature | 40.5 °C | 38.4 °C |
@@ -339,6 +347,7 @@ effective_hours = SUM over h of  scheduled(h) * work_fraction(zone(h)) * workers
 
 ```
 Magarpatta Site 7 - 42 workers, MET 4, direct sun, 20 May (recorded heatwave day)
+Figures below are from the bundled station snapshot, for reproducibility.
 
 UNMANAGED   09:00-17:00   8.0 h x 42 workers   ->   32 effective labour-hours
                                                     core temp limit breached 12:20

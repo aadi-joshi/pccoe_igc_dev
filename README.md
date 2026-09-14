@@ -78,6 +78,10 @@ npx tsx scripts/demo-numbers.ts    # the exact figures quoted in IDEA.md
 `engine-check` reports the EHI response-surface fit against SHRAM's own published values:
 **RMSE 1.17, mean absolute error 0.79, 89.9% exact zone agreement**.
 
+Both scripts run against the bundled station snapshot so their output is reproducible. The
+running app refits the surface from the live feed on every request, so absolute values there
+will differ from day to day — the comparison direction is what holds, not the exact figure.
+
 ---
 
 ## Demo-day resilience
