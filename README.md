@@ -6,7 +6,12 @@ by simulating what the day will do to a worker's body.
 Built for **Indradhanu — International Grand Challenge**, PCCOE Pune. Theme: AI for Climate
 Change (UN SDG 13). Domain: Disaster Resilience, Public Health & Community Well-being.
 
-The full rationale, competitive analysis and Q&A defence live in [IDEA.md](IDEA.md).
+- **[PITCH.md](PITCH.md)** — the full story: why this had to exist, what is genuinely
+  new about it, every design decision and its reasoning, the demo script, and honest
+  answers to the hard questions. Start here if you are presenting it.
+- **[IDEA.md](IDEA.md)** — competition strategy, competitive analysis and Q&A defence.
+- **How does this work?** — a plain-English walkthrough lives in the app itself at
+  `/how-it-works`, with no equations and a full glossary.
 
 ---
 
