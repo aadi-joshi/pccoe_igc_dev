@@ -5,25 +5,27 @@
 
    Rules this file enforces:
    1. Colour encodes heat data. Nothing else is allowed to be saturated.
-   2. Structure comes from hairline rules, not shadows or floating cards.
+   2. Structure comes from soft panels and hairlines, not heavy shadows.
    3. Every number is set in mono with tabular figures so columns hold
       still while values update.
+   4. Nothing on screen is allowed to be jargon without an explanation
+      within reach — see the .explain affordance at the bottom.
    ------------------------------------------------------------------ */
 
 @theme {
   /* Ground — warm paper, not white, not slate */
-  --color-paper: #f6f4ef;
-  --color-paper-raised: #fbfaf7;
-  --color-paper-sunk: #eeebe3;
+  --color-paper: #f7f5f0;
+  --color-paper-raised: #fdfcfa;
+  --color-paper-sunk: #efece4;
 
   /* Ink — warm near-black, never pure #000 */
-  --color-ink: #1b1915;
-  --color-ink-muted: #5c574c;
-  --color-ink-faint: #8b8579;
+  --color-ink: #211e19;
+  --color-ink-muted: #5f5a4f;
+  --color-ink-faint: #8d8779;
 
-  /* Hairlines — the primary structural device */
-  --color-rule: #ddd8cc;
-  --color-rule-strong: #c3bcab;
+  /* Hairlines */
+  --color-rule: #e2ded3;
+  --color-rule-strong: #cac3b2;
 
   /* Heat ramp — zones 1..6. The only saturated colour in the product.
      Each step separates by lightness as well as hue so the ramp survives
@@ -40,12 +42,19 @@
   --color-danger: #c33f2c;
   --color-accent: #8a4b1f;
 
+  /* Tints used for friendly callouts. Low saturation so they never
+     compete with the heat ramp for attention. */
+  --color-safe-tint: #e8f0f2;
+  --color-danger-tint: #f9e9e6;
+  --color-note-tint: #f3efe4;
+
   --font-display: var(--font-plex-serif), Georgia, serif;
   --font-sans: var(--font-plex-sans), system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
-  --radius-xs: 2px;
-  --radius-sm: 3px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
 }
 
 :root {
@@ -72,22 +81,31 @@ body {
   font-feature-settings: "tnum" 1;
 }
 
-/* Instrument-panel label: the small uppercase mono caption that sits
-   above a value. Used everywhere instead of a heading tag. */
+/* Small caption above a value. Kept for genuine data labels only —
+   sentence-case headings are used everywhere a human is being spoken to,
+   because a page shouting in uppercase reads as a machine, not a tool. */
 .label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 10.5px;
   line-height: 1;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-ink-faint);
 }
 
-/* A panel is defined by its rules, not by elevation. */
+/* Sentence-case section heading. The friendly counterpart to .label. */
+.section-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.3;
+  color: var(--color-ink);
+}
+
 .panel {
   background: var(--color-paper-raised);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 
 .panel-head {
@@ -95,32 +113,40 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.625rem 0.875rem;
+  padding: 0.875rem 1rem;
   border-bottom: 1px solid var(--color-rule);
 }
 
-/* Hairline grid paper, used sparingly behind the map */
-.gridpaper {
-  background-image:
-    linear-gradient(to right, var(--color-rule) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--color-rule) 1px, transparent 1px);
-  background-size: 28px 28px;
-  opacity: 0.35;
+/*
+  Glossary affordance.
+
+  Any term a first-time reader would not know gets this treatment: a
+  dotted underline that invites a hover or tap. It is the single most
+  important accessibility feature in a product whose subject matter is
+  full of standards jargon.
+*/
+.explain {
+  border-bottom: 1px dotted var(--color-rule-strong);
+  cursor: help;
+}
+
+.explain:hover,
+.explain:focus-visible {
+  border-bottom-color: var(--color-accent);
 }
 
 /* Focus ring that matches the aesthetic instead of the browser default */
-:where(button, a, [tabindex], input, select):focus-visible {
+:where(button, a, [tabindex], input, select, summary):focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-sm);
 }
 
 ::selection {
-  background: #e4d9c4;
+  background: #e7dcc7;
   color: var(--color-ink);
 }
 
-/* Scrollbars, quietly */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-rule-strong) transparent;
