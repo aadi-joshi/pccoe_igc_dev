@@ -71,6 +71,46 @@ export const ZONES: Record<Zone, ZoneMeta> = {
   },
 };
 
+/**
+ * Work/rest cadence in each briefing language.
+ *
+ * The cadence is the single most operational line in a briefing - it tells a
+ * supervisor what to actually do each hour - so it cannot be left in English
+ * inside a Marathi or Hindi message.
+ */
+export const CADENCE_L10N: Record<Zone, { en: string; mr: string; hi: string }> = {
+  1: {
+    en: "Continuous work",
+    mr: "सलग काम करता येईल",
+    hi: "लगातार काम किया जा सकता है",
+  },
+  2: {
+    en: "Continuous work",
+    mr: "सलग काम करता येईल",
+    hi: "लगातार काम किया जा सकता है",
+  },
+  3: {
+    en: "45 min work / 15 min rest",
+    mr: "दर तासाला ४५ मिनिटे काम, १५ मिनिटे विश्रांती",
+    hi: "हर घंटे ४५ मिनट काम, १५ मिनट आराम",
+  },
+  4: {
+    en: "30 min work / 30 min rest",
+    mr: "दर तासाला ३० मिनिटे काम, ३० मिनिटे विश्रांती",
+    hi: "हर घंटे ३० मिनट काम, ३० मिनट आराम",
+  },
+  5: {
+    en: "15 min work / 45 min rest",
+    mr: "दर तासाला १५ मिनिटे काम, ४५ मिनिटे विश्रांती",
+    hi: "हर घंटे १५ मिनट काम, ४५ मिनट आराम",
+  },
+  6: {
+    en: "Stop work",
+    mr: "काम पूर्णपणे बंद करा",
+    hi: "काम पूरी तरह बंद करें",
+  },
+};
+
 export const MET_LABEL: Record<MetLevel, string> = {
   3: "Light work",
   4: "Moderate work",
