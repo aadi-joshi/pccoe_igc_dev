@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Plan } from "@/lib/types";
 import {
   LANGUAGES,
@@ -37,14 +37,8 @@ export function BriefingPanel({ plan }: { plan: Plan }) {
   const fallbackText = useMemo(() => renderBriefing(facts, lang), [facts, lang]);
   const text = source === "nugen" && nugenText ? nugenText : fallbackText;
 
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-
-  // A new plan or language invalidates any model output we were showing.
-  useEffect(() => {
-    setNugenText(null);
-    setNugenError(null);
-    setAcknowledged(false);
-  }, [plan.site.id, plan.date, plan.blocks.length, lang]);
+  // The panel is remounted by its parent when the plan identity changes, so
+  // stale model output cannot survive a recompute without an effect here.
 
   useEffect(() => {
     return () => {
@@ -95,7 +89,6 @@ export function BriefingPanel({ plan }: { plan: Plan }) {
     u.rate = 0.92;
     u.onend = () => setSpeaking(false);
     u.onerror = () => setSpeaking(false);
-    utteranceRef.current = u;
     setSpeaking(true);
     synth.speak(u);
   };

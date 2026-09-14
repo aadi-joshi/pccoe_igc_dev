@@ -72,9 +72,12 @@ export function StrainChart({ baseline, optimised, blocks }: StrainChartProps) {
 
   return (
     <figure className="m-0">
+      {/* On a phone a 760-wide plot scaled to fit would render its 10px
+          labels at ~5px. Scroll it instead of shrinking it. */}
+      <div className="-mx-1 overflow-x-auto px-1">
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-        className="block h-auto w-full"
+        className="block h-auto w-full min-w-[640px]"
         role="img"
         aria-label={`Predicted core body temperature. Unmanaged shift peaks at ${baseline.peakCoreTempC.toFixed(
           1,
@@ -267,6 +270,7 @@ export function StrainChart({ baseline, optimised, blocks }: StrainChartProps) {
           °C
         </text>
       </svg>
+      </div>
 
       <figcaption className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 px-1">
         <LegendItem color="var(--color-danger)" label="Unmanaged 09:00–17:00" />

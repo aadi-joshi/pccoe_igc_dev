@@ -41,9 +41,12 @@ export function ZoneTimeline({
 
   return (
     <figure className="m-0">
+      {/* Same min-width as StrainChart: the two share an x-axis and must
+          stay aligned at every viewport size. */}
+      <div className="-mx-1 overflow-x-auto px-1">
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-        className="block h-auto w-full"
+        className="block h-auto w-full min-w-[640px]"
         role="img"
         aria-label="Heat stress zone by hour, with scheduled work blocks"
       >
@@ -86,7 +89,9 @@ export function ZoneTimeline({
                 className="tnum"
                 fontSize={9.5}
                 fontWeight={600}
-                fill={h.zone >= 3 ? "#ffffff" : "#ffffff"}
+                // Zones 3 and 4 are light enough that white type on them
+                // fails contrast; everything else takes white.
+                fill={h.zone === 3 || h.zone === 4 ? "var(--color-ink)" : "#ffffff"}
                 opacity={0.95}
                 pointerEvents="none"
               >
@@ -183,6 +188,7 @@ export function ZoneTimeline({
           </text>
         )}
       </svg>
+      </div>
     </figure>
   );
 }

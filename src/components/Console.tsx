@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import type { ConsoleData } from "@/lib/server";
 import type { MetLevel, SunExposure } from "@/lib/types";
 import { SITES, SITE_KIND_LABEL } from "@/lib/sites";
@@ -10,7 +10,7 @@ import { ZoneTimeline } from "./ZoneTimeline";
 import { StationMap } from "./StationMap";
 import { DownscalePanel, LedgerPanel } from "./panels";
 import { BriefingPanel } from "./BriefingPanel";
-import { Panel, Pill, Segmented, Stat, ZoneChip, formatClock } from "./ui";
+import { Panel, Pill, Segmented, Stat, ZoneChip } from "./ui";
 
 export function Console({ initial }: { initial: ConsoleData }) {
   const [data, setData] = useState(initial);
@@ -47,30 +47,38 @@ export function Console({ initial }: { initial: ConsoleData }) {
     [],
   );
 
+  // Recomputation is driven from the event handlers rather than an effect.
+  // The plan is a function of the controls, so the fetch belongs where the
+  // control changes - an effect here would only add a cascading render.
+
   // Selecting a different site adopts that site's registered work profile,
   // rather than carrying the previous site's what-if settings across.
   const selectSite = (id: string) => {
     const site = SITES.find((s) => s.id === id);
-    if (!site) return;
+    if (!site || id === siteId) return;
     setSiteId(id);
     setMetLevel(site.metLevel);
     setExposure(site.exposure);
     void recompute({ siteId: id, scenario, metLevel: site.metLevel, exposure: site.exposure });
   };
 
-  useEffect(() => {
-    // Skip the initial render: the server already computed this exact plan.
-    if (
-      siteId === initial.plan.site.id &&
-      scenario === initial.meta.scenario &&
-      metLevel === initial.plan.site.metLevel &&
-      exposure === initial.plan.site.exposure
-    ) {
-      return;
-    }
-    void recompute({ siteId, scenario, metLevel, exposure });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scenario, metLevel, exposure]);
+  const selectScenario = (next: "live" | "heatwave") => {
+    if (next === scenario) return;
+    setScenario(next);
+    void recompute({ siteId, scenario: next, metLevel, exposure });
+  };
+
+  const selectMet = (next: MetLevel) => {
+    if (next === metLevel) return;
+    setMetLevel(next);
+    void recompute({ siteId, scenario, metLevel: next, exposure });
+  };
+
+  const selectExposure = (next: SunExposure) => {
+    if (next === exposure) return;
+    setExposure(next);
+    void recompute({ siteId, scenario, metLevel, exposure: next });
+  };
 
   const { plan, localStations, meta } = data;
   const site = plan.site;
@@ -78,7 +86,7 @@ export function Console({ initial }: { initial: ConsoleData }) {
 
   return (
     <div className="min-h-screen">
-      <Header meta={meta} scenario={scenario} onScenario={setScenario} />
+      <Header meta={meta} scenario={scenario} onScenario={selectScenario} />
 
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-px bg-[var(--color-rule)] lg:grid-cols-[300px_1fr]">
         {/* ---------------- Left rail ---------------- */}
@@ -151,8 +159,8 @@ export function Console({ initial }: { initial: ConsoleData }) {
           <Controls
             metLevel={metLevel}
             exposure={exposure}
-            onMet={setMetLevel}
-            onExposure={setExposure}
+            onMet={selectMet}
+            onExposure={selectExposure}
             pending={pending}
           />
 
@@ -239,7 +247,10 @@ export function Console({ initial }: { initial: ConsoleData }) {
               <LedgerPanel plan={plan} />
             </div>
 
-            <BriefingPanel plan={plan} />
+            <BriefingPanel
+              key={`${plan.site.id}:${plan.date}:${metLevel}:${exposure}`}
+              plan={plan}
+            />
           </div>
 
           <Footer meta={meta} />
@@ -400,5 +411,3 @@ function Meta({ k, v }: { k: string; v: string }) {
     </div>
   );
 }
-
-export { formatClock };

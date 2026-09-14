@@ -134,7 +134,7 @@ export async function fetchShram(): Promise<ShramSnapshot> {
     };
     cache = { at: Date.now(), snapshot };
     return snapshot;
-  } catch (err) {
+  } catch {
     if (cache) {
       return { ...cache.snapshot, stale: true };
     }
@@ -152,15 +152,4 @@ export async function fetchShram(): Promise<ShramSnapshot> {
 export function stationsInDistrict(stations: Station[], district: string): Station[] {
   const needle = district.toLowerCase();
   return stations.filter((s) => s.district.toLowerCase().includes(needle));
-}
-
-/** Tidy SHRAM's station names for display: "Dps Hadapsar Pune" → "DPS Hadapsar". */
-export function displayName(station: Station): string {
-  const cleaned = station.name
-    .replace(new RegExp(`\\s+${station.district}$`, "i"), "")
-    .trim();
-  return cleaned
-    .split(" ")
-    .map((w) => (w.length <= 3 && w === w.toUpperCase() ? w : w))
-    .join(" ");
 }
