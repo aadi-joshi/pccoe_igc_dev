@@ -151,6 +151,8 @@ export interface DownscaleInput {
   biasC: number;
   /** Hour index used as the reference for the breakdown panel. */
   referenceIndex: number;
+  /** See DownscaleBreakdown.anchorComparable. */
+  anchorComparable: boolean;
 }
 
 /**
@@ -223,6 +225,7 @@ export function downscale(input: DownscaleInput): {
     uhiDeltaC: uhi.total,
     siteTempC: refSite.tempC,
     deltaVsStationC: refSite.tempC - station.tempC,
+    anchorComparable: input.anchorComparable,
     contributions: [
       {
         label: "Gridded forecast at site",

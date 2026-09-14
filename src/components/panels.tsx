@@ -22,31 +22,49 @@ export function DownscalePanel({ plan }: { plan: Plan }) {
       title="Site microclimate · downscaling"
       aside={
         <span className="tnum text-[11px] text-[var(--color-ink-muted)]">
-          anchor {d.stationName} · {d.stationDistanceKm.toFixed(1)} km
+          {d.anchorComparable
+            ? `anchor ${d.stationName} · ${d.stationDistanceKm.toFixed(1)} km`
+            : "archive day · no live anchor"}
         </span>
       }
     >
       <div className="grid grid-cols-3 gap-4 border-b border-[var(--color-rule)] px-3.5 py-3.5">
         <Stat
           label="Station reads"
-          value={d.stationTempC.toFixed(1)}
-          unit="°C"
-          note="SHRAM observation"
+          value={d.anchorComparable ? d.stationTempC.toFixed(1) : "—"}
+          unit={d.anchorComparable ? "°C" : undefined}
+          note={
+            d.anchorComparable
+              ? "SHRAM observation"
+              : "not concurrent with this day"
+          }
         />
         <Stat
           label="Site estimate"
           value={d.siteTempC.toFixed(1)}
           unit="°C"
           note="15:00, downscaled"
-          size="md"
         />
-        <Stat
-          label="Divergence"
-          value={`${d.deltaVsStationC >= 0 ? "+" : "−"}${Math.abs(d.deltaVsStationC).toFixed(1)}`}
-          unit="°C"
-          tone={d.deltaVsStationC >= 1.5 ? "danger" : "default"}
-          note="site vs station"
-        />
+        {/* The station-versus-site divergence is only meaningful when both
+            describe the same moment. On the historical scenario day it would
+            be a difference in date, so we show the land-cover effect instead. */}
+        {d.anchorComparable ? (
+          <Stat
+            label="Divergence"
+            value={`${d.deltaVsStationC >= 0 ? "+" : "−"}${Math.abs(d.deltaVsStationC).toFixed(1)}`}
+            unit="°C"
+            tone={d.deltaVsStationC >= 1.5 ? "danger" : "default"}
+            note="site vs station"
+          />
+        ) : (
+          <Stat
+            label="Land-cover effect"
+            value={`${d.uhiDeltaC >= 0 ? "+" : "−"}${Math.abs(d.uhiDeltaC).toFixed(1)}`}
+            unit="°C"
+            tone={d.uhiDeltaC >= 1.5 ? "danger" : "default"}
+            note="vs open ground"
+          />
+        )}
       </div>
 
       <div className="px-3.5 py-3">

@@ -90,6 +90,7 @@ export async function buildPlan(args: BuildPlanArgs): Promise<PlanBuildResult> {
     // Mid-afternoon is the meaningful reference hour for the breakdown panel:
     // it is when the site/station divergence matters operationally.
     referenceIndex: 14,
+    anchorComparable: scenario === "live",
   });
 
   const optimised = optimise(site, hours, subject);

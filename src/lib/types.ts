@@ -96,6 +96,14 @@ export interface DownscaleBreakdown {
   siteTempC: number;
   /** How much hotter the site runs than the raw station reading. */
   deltaVsStationC: number;
+  /**
+   * Whether the station observation and the site estimate describe the same
+   * moment. False for the historical heatwave scenario, where the station is
+   * reporting today and the forecast grid is replaying a day in May - a
+   * difference between them is a difference in date, not in microclimate,
+   * and must not be presented as one.
+   */
+  anchorComparable: boolean;
   contributions: { label: string; valueC: number; note: string }[];
 }
 

@@ -54,15 +54,35 @@ None of them answer the only question a site supervisor actually has at 6 AM:
 KAVACH answers it — and, critically, answers it in the currency the supervisor responds to.
 Not "Zone 5, avoid exertion." Instead:
 
-> *Magarpatta Site 7 · 42 workers, heavy labour, direct sun.*
+> *Magarpatta Site 7 · 42 workers, moderate labour, direct sun, recorded heatwave day.*
 > *An unmanaged 09:00–17:00 shift drives predicted core body temperature past the 38.5 °C
-> safety limit at **11:40**, and yields **231 effective labour-hours** after heat-related
+> safety limit at **12:20**, and yields **32 effective labour-hours** after heat-related
 > work-capacity loss.*
-> *The KAVACH schedule — 06:00–10:30, break, 16:00–19:00 — peaks at **38.1 °C**, stays inside
-> Maharashtra SOP, and yields **296 effective labour-hours**.*
-> *Safer **and** 28% more productive.*
+> *The KAVACH schedule — 06:00–10:00, stand-down, 16:00–20:00 — peaks at **37.2 °C**, stays
+> inside Maharashtra SOP, and yields **105 effective labour-hours**.*
+> *Safer **and** 3× the usable labour.*
 
-That last line is the entire adoption thesis. Safety advice gets ignored. Output does not.
+Those are figures the engine actually produces, not illustrations — reproduce them with
+`npx tsx scripts/demo-numbers.ts`.
+
+That comparison is the adoption thesis. Safety advice gets ignored; output does not.
+
+### Where the thesis does *not* hold — and why we say so
+
+At the very highest work intensity the trade-off reverses, and the product reports it
+plainly rather than hiding it. Same site, same day, at MET 6 (sustained very heavy labour):
+
+| | Unmanaged 09:00–17:00 | KAVACH |
+|---|---|---|
+| Effective labour | 53 h | **37 h** |
+| Peak core temperature | 40.5 °C | 38.4 °C |
+| Limit breach | **09:36** — after 36 minutes | none |
+
+Some days genuinely cannot deliver eight hours of very heavy outdoor labour safely, and a
+system that claimed otherwise would be lying. KAVACH says so, and then shows the way out:
+drop the intensity from MET 6 to MET 4 and the same day goes from −30% to **+233%**. That
+single control is the most honest thing in the product and the most persuasive thing in the
+demo — the trade-off is real, and it is *manageable*.
 
 ### Why this is a software problem, not a hardware one
 
@@ -228,6 +248,16 @@ model, not a trained ML model — we do not have site-level ground truth to trai
 one would be dishonest. The architecture is built so that a learned residual drops into exactly
 that slot. Saying this out loud is worth more in Q&A than a fabricated accuracy score.
 
+**Validation we can actually quote.** SHRAM publishes EHI and its zone per station but not the
+closed form of the index, and we need EHI at *site* conditions no station reports. So we fit a
+quadratic response surface to the live feed itself — ~780 simultaneous stations spanning
+12–32 °C and 18–100% RH, which makes it an interpolation rather than an extrapolation. Against
+the feed's own published values it reaches **RMSE 1.17 EHI units, mean absolute error 0.79, and
+89.9% exact agreement with SHRAM's published zone labels**. The solar component is handled
+separately: we fit the *shade* surface, which genuinely is a function of temperature and
+humidity, and add back the measured median sun-minus-shade increment scaled by each hour's
+forecast radiation — otherwise the model reports full solar load at 05:00.
+
 **Radiant load.** Because we have direct solar radiation from Open-Meteo, we estimate mean radiant
 temperature rather than assuming it — which is what separates a sun-exposed site from a shaded one
 by more than a checkbox.
@@ -308,16 +338,26 @@ effective_hours = SUM over h of  scheduled(h) * work_fraction(zone(h)) * workers
 **The ledger the contractor actually reads:**
 
 ```
-UNMANAGED   09:00-17:00   8.0 h x 42 workers   ->  231 effective labour-hours
-                                                   core temp limit breached 11:40
-                                                   [X] Maharashtra SOP non-compliant
+Magarpatta Site 7 - 42 workers, MET 4, direct sun, 20 May (recorded heatwave day)
 
-KAVACH      06:00-10:30 + 16:00-19:00          ->  296 effective labour-hours
-                                                   peak core temp 38.1 degC
-                                                   [OK] SOP compliant
+UNMANAGED   09:00-17:00   8.0 h x 42 workers   ->   32 effective labour-hours
+                                                    core temp limit breached 12:20
+                                                    peak core temperature 39.01 degC
 
-            +65 effective hours   ·   +28%   ·   0 heat-limit breaches
+KAVACH      06:00-10:00 + 16:00-20:00          ->  105 effective labour-hours
+                                                    peak core temperature 37.23 degC
+                                                    [OK] Maharashtra SOP compliant
+
+            +74 effective hours   |   +233%   |   0 heat-limit breaches
 ```
+
+The gain is this large because midday hours in Zone 5 and 6 return almost no usable labour
+at all. Eight hours on site is not eight hours of work; the ledger prices that honestly, in
+both directions.
+
+The optimiser is capped so it can never "win" by simply rostering a longer day than the
+baseline: total scheduled time is constrained to the contractor's target plus one hour. The
+comparison is like-for-like - same time on site, better hours chosen.
 
 This reframes heat safety from a cost into a scheduling optimisation. That is the difference
 between a product that gets mandated and one that gets adopted.
@@ -580,27 +620,42 @@ automation to people who are already legally obliged to comply.
 | Fix | The model is explicitly outside the safety decision path. Every number is computed by the engines; Nugen only renders language. This is checkable — turn the API off and the schedule is unchanged |
 | Line | *"Our AI cannot make the schedule unsafe, because it does not make the schedule."* |
 
-### Flaw 6 — "Your UHI coefficients are not trained"
+### Flaw 6a — "Your own tool sometimes reduces output"
+
+| Severity | High — and we lead with it rather than wait to be caught |
+|---|---|
+| Problem | At MET 6 in extreme heat the optimised schedule returns *fewer* effective labour-hours than working through, because no safe schedule reaches the target hours |
+| Fix | Report it. The ledger states the trade-off in plain language whenever it is negative, and the work-intensity control shows the recovery path (MET 6 → MET 4 turns −30% into +233% on the same day). A tool that only ever produced good news would not be a safety tool |
+| Line | *"Some days cannot safely deliver eight hours of very heavy labour. We would rather tell the contractor that than quietly rig the comparison."* |
+
+### Flaw 6b — "You could inflate the productivity gain by scheduling a longer day"
+
+| Severity | Medium — a judge who reads the method will look for this |
+|---|---|
+| Problem | An optimiser free to roster 12 hours will always beat an 8-hour baseline, regardless of heat |
+| Fix | Total scheduled time is capped at the contractor's target plus one hour, so the comparison is like-for-like. The gain comes from *which* hours are chosen, not how many |
+
+### Flaw 7 — "Your UHI coefficients are not trained"
 
 | Severity | Medium — and we raise it before the judges do |
 |---|---|
 | Problem | Term 3 of the downscaling model is parametric, not learned |
 | Fix | We say so explicitly, cite the literature the coefficients come from, and show the interface where a trained residual model plugs in. Terms 1 and 2 are live data and standard MOS bias correction — the majority of the signal is real |
 
-### Flaw 7 — "Can you actually deliver voice calls?"
+### Flaw 8 — "Can you actually deliver voice calls?"
 
 | Severity | Medium |
 |---|---|
 | Problem | Telephony integration is heavy for a hackathon |
 | Fix | Web Speech API for the live demo — real synthesis, on stage, zero dependencies. Exotel documented as the production path. We do not claim a telephony integration we have not built |
 
-### Flaw 8 — "Nugen vs Newgen"
+### Flaw 9 — "Nugen vs Newgen"
 
 | Severity | Low, clarified |
 |---|---|
 | Note | The co-organiser is **Nugen Intelligence** (nugen.in), not Newgen. Use only the official pccoeigc.com prizes page for signup links |
 
-### Flaw 9 — Dates in v1.0 do not match the calendar
+### Flaw 10 — Dates in v1.0 do not match the calendar
 
 | Severity | Blocking, administrative |
 |---|---|
@@ -662,7 +717,7 @@ automation to people who are already legally obliged to comply.
 
 ## 13. Build Roadmap
 
-> Re-base these against the verified official timeline before committing (see Flaw 9).
+> Re-base these against the verified official timeline before committing (see Flaw 10).
 
 | Stage | Deliverable |
 |---|---|
@@ -692,17 +747,24 @@ visceral, then show the money, then make it speak.
 
 | Time | Action | What judges see |
 |---|---|---|
-| 0:00 | "This is live SHRAM data. 17 stations in Pune, pulled 90 seconds ago." | Station map, live timestamp, real zone values |
-| 0:30 | "Supervisor Rajesh runs a construction site in Magarpatta. 42 workers, heavy labour, direct sun." | Site console |
-| 1:00 | "The nearest station says Zone 5. His site is denser and greener-free — our model puts it 2.8 °C hotter." | Downscaling panel: station value vs site value, the three terms broken out |
-| 1:30 | **"Here is what a normal 9-to-5 does to one of his workers."** | **Core temperature curve climbing, crossing the 38.5 °C dashed limit at 11:40. It keeps climbing.** |
-| 2:15 | "Now the optimiser." | Curve redraws under the limit. Shift blocks snap to 06:00-10:30 and 16:00-19:00 |
-| 2:45 | "And it is not a sacrifice. It is 65 more effective labour-hours." | Productivity ledger, side by side |
-| 3:15 | "Rajesh does not read English dashboards." | Nugen-generated Marathi briefing appears |
-| 3:30 | **Play it aloud.** | **Marathi voice fills the hall** |
-| 4:00 | "He acknowledges. PMC sees compliance." | Ack, ledger updates |
-| 4:20 | "786 districts. No hardware. Today." | Scale slide |
+| 0:00 | "This is the live SHRAM feed. 786 stations, 17 of them in Pune, pulled minutes ago." | Station map, live timestamp, real zone values |
+| 0:30 | "Rajesh runs a construction site in Magarpatta. 42 workers, direct sun." | Site console |
+| 1:00 | "No station sits on his site. So we downscale — gridded forecast, live bias correction against the nearest station, then a land-cover term. His site runs 3.3 °C above open ground." | Downscaling panel, all terms broken out, including the one we admit is parametric |
+| 1:30 | **"Here is what an ordinary 9-to-5 does to one of his workers."** | **Core temperature curve climbing and crossing the 38.5 °C dashed limit at 12:20. Past the breach it goes dashed — we stop claiming validity.** |
+| 2:10 | "Now the optimiser." | Curve redraws under the limit; blocks snap to 06:00–10:00 and 16:00–20:00 |
+| 2:30 | "And it is not a sacrifice — 32 effective labour-hours becomes 105." | Productivity ledger, side by side |
+| 2:50 | **"But let me show you the case we lose."** Switch MET 4 → MET 6. | **Curve breaks the limit again. Ledger flips to −30%. The system says so plainly.** |
+| 3:10 | "Some days cannot safely deliver eight hours of very heavy labour. We say that instead of pretending. And we show the way out." Switch back to MET 4. | Schedule becomes viable again, live, computed |
+| 3:30 | "Rajesh does not read English dashboards." | Marathi briefing appears |
+| 3:45 | **Play it aloud.** | **Marathi voice fills the hall** |
+| 4:05 | "Switch the source to the deterministic renderer. Watch the schedule." | Text changes, **schedule does not move** — the AI is outside the safety path |
+| 4:25 | "786 districts. No hardware. Today." | Scale |
 | 4:40 | "India has the heat data. KAVACH makes the heat decision." | Close |
+
+**The MET switch at 2:50 is the demo's spine.** It is the software equivalent of the heat
+gun: something changes live, computed in front of the judges, and it is the moment that
+proves the model is real rather than a recording — precisely *because* it shows the system
+losing.
 
 ---
 
@@ -713,10 +775,10 @@ visceral, then show the money, then make it speak.
 | Venue WiFi fails mid-demo | Medium | Critical | Engines are pure functions over cached snapshots. Ship a bundled data fixture; demo runs fully offline |
 | SHRAM feed changes shape or goes down | Low | High | Parse defensively, cache last good response, bundled fallback fixture |
 | Nugen alignment not ready in time | Medium | High | Deterministic template renderer behind the same interface; start alignment in Stage 1, not Stage 4 |
-| Judge presses on untrained UHI coefficients | High | Medium | We raise it first (Flaw 6). Honesty is the defence |
+| Judge presses on untrained UHI coefficients | High | Medium | We raise it first (Flaw 7). Honesty is the defence |
 | "No hardware" reads as less effort | Medium | High | Section 10.2 reframe, rehearsed. Show the ISO implementation on screen |
 | Another team pitches heat + LLM | High | Medium | Physiological simulation + productivity ledger is the moat. A chatbot on a heat map is not close |
-| Official timeline already passed | Unknown | Blocking | Verify on pccoeigc.com immediately (Flaw 9) |
+| Official timeline already passed | Unknown | Blocking | Verify on pccoeigc.com immediately (Flaw 10) |
 | Marathi briefing quality is poor | Medium | Medium | Native-speaker review of every demo string before recording |
 
 ---
