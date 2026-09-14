@@ -96,7 +96,14 @@ export function Intro() {
               Can this crew work outdoors today, and when?
             </strong>{" "}
             Everything below is the reasoning behind that answer. Any underlined term can be
-            hovered or tapped for a plain-English explanation.
+            hovered or tapped for a plain-English explanation, and{" "}
+            <a
+              href="/how-it-works"
+              className="underline decoration-[var(--color-rule-strong)] underline-offset-2 hover:decoration-[var(--color-accent)]"
+            >
+              How does this work?
+            </a>{" "}
+            explains the whole system in five steps.
           </p>
         </div>
         <button

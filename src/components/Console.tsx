@@ -314,6 +314,12 @@ function Header({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <a
+            href="/how-it-works"
+            className="rounded-full border border-[var(--color-rule-strong)] px-3.5 py-1.5 text-[12.5px] text-[var(--color-ink-muted)] transition-colors hover:bg-[var(--color-paper-sunk)]"
+          >
+            How does this work?
+          </a>
           <Segmented
             label="Weather to plan against"
             value={scenario as "live" | "heatwave"}
