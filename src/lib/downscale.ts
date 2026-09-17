@@ -235,10 +235,9 @@ export function downscale(input: DownscaleInput): {
       {
         label: "Station bias correction",
         valueC: bias,
-        note:
-          bias === 0
-            ? "No contemporaneous observation to anchor against"
-            : `MOS anchor on ${station.name}, ${input.stationDistanceKm.toFixed(1)} km away`,
+        note: input.anchorComparable
+          ? `MOS anchor on ${station.name}, ${input.stationDistanceKm.toFixed(1)} km away`
+          : `Archive day — ${station.name} is not from the same date`,
       },
       ...uhi.parts,
     ],
