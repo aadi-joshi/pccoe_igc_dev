@@ -4,6 +4,7 @@ import type { MetLevel, SunExposure } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 15;
 
 /**
  * Recompute a plan for a site under what-if parameters.

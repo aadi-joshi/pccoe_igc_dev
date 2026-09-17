@@ -56,6 +56,7 @@ export interface Site {
   metLevel: MetLevel;
   exposure: SunExposure;
   supervisor: string;
+  phone: string;
   /** Contractor's minimum acceptable scheduled hours per day. */
   minDailyHours: number;
   /** Daily wage per worker, rupees. Used by the productivity ledger. */

@@ -82,9 +82,9 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     body: "What a normal working day looks like today: a straight 09:00–17:00 shift worked through the heat, with no enforced rest.",
     example: "It is the comparison point, not a strawman — research in Pune found most outdoor workers never rest in shade during a shift.",
   },
-  nugen: {
-    body: "The AI model that turns the finished plan into spoken Marathi or Hindi a supervisor can act on.",
-    example: "It only rewrites the words. Every time and number is calculated before it is involved, so it cannot make a shift unsafe.",
+  briefing: {
+    body: "A short spoken instruction in Marathi, Hindi or English, generated from the finished shift plan and read to the supervisor.",
+    example: "It only uses times, water volumes and work windows the engines already calculated.",
   },
   meanRadiant: {
     body: "How much heat a worker absorbs by radiation — from the sun above and from hot surfaces around them.",

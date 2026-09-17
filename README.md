@@ -6,10 +6,10 @@ by simulating what the day will do to a worker's body.
 Built for **Indradhanu — International Grand Challenge**, PCCOE Pune. Theme: AI for Climate
 Change (UN SDG 13). Domain: Disaster Resilience, Public Health & Community Well-being.
 
-- **[PITCH.md](PITCH.md)** — the full story: why this had to exist, what is genuinely
+- **[PITCH.md](docs/PITCH.md)** — the full story: why this had to exist, what is genuinely
   new about it, every design decision and its reasoning, the demo script, and honest
   answers to the hard questions. Start here if you are presenting it.
-- **[IDEA.md](IDEA.md)** — competition strategy, competitive analysis and Q&A defence.
+- **[IDEA.md](docs/IDEA.md)** — competition strategy, competitive analysis and Q&A defence.
 - **How does this work?** — a plain-English walkthrough lives in the app itself at
   `/how-it-works`, with no equations and a full glossary.
 
@@ -28,11 +28,9 @@ KAVACH answers it in four steps, none of which need hardware in the field:
 | **Downscaling** | Estimates site-level conditions from a gridded forecast + live MOS bias correction against the nearest SHRAM station + a land-cover urban-heat-island term |
 | **ISO 7933 PHS** | Steps a whole-body heat balance minute by minute and predicts core body temperature and sweat loss across the shift |
 | **Optimiser** | Searches candidate schedules, discards any that breach a physiological limit, and maximises *effective* labour under Maharashtra SOP constraints |
-| **Briefing** | Renders the plan as a spoken Marathi / Hindi / English briefing via a Nugen aligned model, with a deterministic fallback |
+| **Briefing** | Renders the plan as a spoken Marathi / Hindi / English briefing, sent to the supervisor and recorded in the compliance ledger |
 
-**The AI is deliberately outside the safety decision path.** Every time, threshold and volume
-is computed by the engines; the model only phrases them. Switch the briefing source in the UI
-and the schedule does not move.
+Every time, threshold and volume is computed by the engines. The briefing only phrases them.
 
 ---
 
@@ -49,25 +47,7 @@ npx eslint src               # lint
 npx tsc --noEmit             # typecheck
 ```
 
-### Environment
-
-Everything works with no configuration — the Nugen path degrades to a deterministic
-renderer and the data layer falls back to a bundled snapshot. To enable aligned inference,
-copy `.env.example` to `.env.local`:
-
-| Variable | Purpose |
-|---|---|
-| `NUGEN_API_KEY` | Enables Nugen aligned-model briefings |
-| `NUGEN_BASE_URL` | Override the inference host |
-| `NUGEN_MODEL` | The aligned model deployed for this project |
-
-> Verify the exact endpoint path and model id against `docs.nugen.in` for your account
-> before the demo. If they differ, only the two constants at the top of
-> [`src/lib/nugen.ts`](src/lib/nugen.ts) need to change — the product keeps working from the
-> deterministic renderer in the meantime.
->
-> Obtain credentials only through the official `pccoeigc.com` prizes page. Do not use signup
-> links from third-party documents.
+No environment variables are required.
 
 ---
 
@@ -115,10 +95,10 @@ src/
     phs.ts          ISO 7933 predicted heat strain
     optimizer.ts    shift search + productivity ledger
     plan.ts         pipeline orchestration
-    briefing.ts     deterministic multilingual briefing
-    nugen.ts        Nugen aligned-model adapter (server only)
+    briefing.ts     multilingual supervisor briefing
+    ask.ts          plan-grounded supervisor Q&A
   components/       console UI, hand-drawn SVG charts
-  app/api/          plan + brief route handlers
+  app/              pages + plan / brief / ask / status routes
 scripts/            engine verification (not part of the build)
 ```
 

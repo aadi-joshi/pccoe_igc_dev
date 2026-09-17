@@ -84,8 +84,8 @@ export async function fetchGrid(
 
   try {
     const res = await fetch(url, {
-      signal: AbortSignal.timeout(15000),
-      next: { revalidate: 1800 },
+      cache: "no-store",
+      signal: AbortSignal.timeout(4000),
     });
     if (!res.ok) throw new Error(`Open-Meteo responded ${res.status}`);
     const json = (await res.json()) as { hourly?: RawHourly };
@@ -100,12 +100,6 @@ export async function fetchGrid(
   }
 }
 
-/**
- * Last-resort diurnal profile, used only when Open-Meteo is unreachable.
- *
- * Clearly labelled in the UI when it is in play — we never present a modelled
- * curve as though it were observed data.
- */
 function syntheticDay(lat: number, scenario: Scenario): GridHour[] {
   const peak = scenario === "heatwave" ? 41 : 31;
   const range = scenario === "heatwave" ? 12 : 7;

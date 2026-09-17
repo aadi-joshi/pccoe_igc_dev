@@ -10,6 +10,7 @@ import { ZoneTimeline } from "./ZoneTimeline";
 import { StationMap } from "./StationMap";
 import { DownscalePanel, LedgerPanel } from "./panels";
 import { BriefingPanel } from "./BriefingPanel";
+import { Chrome } from "./Chrome";
 import { Callout, Explain, Panel, Pill, Segmented, Stat, ZoneChip } from "./ui";
 import { Verdict } from "./Verdict";
 import { Intro } from "./Intro";
@@ -20,6 +21,7 @@ export function Console({ initial }: { initial: ConsoleData }) {
   const [scenario, setScenario] = useState(initial.meta.scenario);
   const [metLevel, setMetLevel] = useState<MetLevel>(initial.plan.site.metLevel);
   const [exposure, setExposure] = useState<SunExposure>(initial.plan.site.exposure);
+  const [workers, setWorkers] = useState(initial.plan.site.workers);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +31,7 @@ export function Console({ initial }: { initial: ConsoleData }) {
       scenario: string;
       metLevel: MetLevel;
       exposure: SunExposure;
+      workers: number;
     }) => {
       try {
         const res = await fetch("/api/plan", {
@@ -61,25 +64,37 @@ export function Console({ initial }: { initial: ConsoleData }) {
     setSiteId(id);
     setMetLevel(site.metLevel);
     setExposure(site.exposure);
-    void recompute({ siteId: id, scenario, metLevel: site.metLevel, exposure: site.exposure });
+    setWorkers(site.workers);
+    void recompute({
+      siteId: id,
+      scenario,
+      metLevel: site.metLevel,
+      exposure: site.exposure,
+      workers: site.workers,
+    });
   };
 
   const selectScenario = (next: "live" | "heatwave") => {
     if (next === scenario) return;
     setScenario(next);
-    void recompute({ siteId, scenario: next, metLevel, exposure });
+    void recompute({ siteId, scenario: next, metLevel, exposure, workers });
   };
 
   const selectMet = (next: MetLevel) => {
     if (next === metLevel) return;
     setMetLevel(next);
-    void recompute({ siteId, scenario, metLevel: next, exposure });
+    void recompute({ siteId, scenario, metLevel: next, exposure, workers });
   };
 
   const selectExposure = (next: SunExposure) => {
     if (next === exposure) return;
     setExposure(next);
-    void recompute({ siteId, scenario, metLevel, exposure: next });
+    void recompute({ siteId, scenario, metLevel, exposure: next, workers });
+  };
+
+  const selectWorkers = (next: number) => {
+    setWorkers(next);
+    void recompute({ siteId, scenario, metLevel, exposure, workers: next });
   };
 
   const { plan, localStations, meta } = data;
@@ -87,15 +102,40 @@ export function Console({ initial }: { initial: ConsoleData }) {
   const peakMeta = ZONES[plan.peakZone];
 
   return (
-    <div className="min-h-screen">
-      <Header meta={meta} scenario={scenario} onScenario={selectScenario} />
+    <Chrome
+      actions={
+        <>
+          <Segmented
+            label="Weather to plan against"
+            value={scenario as "live" | "heatwave"}
+            onChange={selectScenario}
+            options={[
+              { value: "live", label: "Today", title: "Live SHRAM readings plus the 72-hour forecast" },
+              {
+                value: "heatwave",
+                label: "A May heatwave",
+                title: "A recorded peak-summer day",
+              },
+            ]}
+          />
+          <Pill tone="ok">
+            <span
+              aria-hidden
+              className="inline-block h-1.5 w-1.5 rounded-full"
+              style={{ background: "var(--color-safe)" }}
+            />
+            SHRAM · {meta.totalStations} stations
+          </Pill>
+        </>
+      }
+    >
 
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-px bg-[var(--color-rule)] lg:grid-cols-[300px_1fr]">
         {/* ---------------- Left rail ---------------- */}
         <aside className="bg-[var(--color-paper)] px-4 py-5 lg:px-5">
           <div className="label mb-1.5">Step 1 · choose a site</div>
           <p className="mb-3 text-[11.5px] leading-relaxed text-[var(--color-ink-muted)]">
-            Three real Pune work sites.
+            Registered Pune work sites.
           </p>
           <ul className="mb-6 space-y-px">
             {SITES.map((s) => {
@@ -170,8 +210,10 @@ export function Console({ initial }: { initial: ConsoleData }) {
           <Controls
             metLevel={metLevel}
             exposure={exposure}
+            workers={workers}
             onMet={selectMet}
             onExposure={selectExposure}
+            onWorkers={selectWorkers}
             pending={pending}
           />
 
@@ -280,7 +322,7 @@ export function Console({ initial }: { initial: ConsoleData }) {
             </div>
 
             <BriefingPanel
-              key={`${plan.site.id}:${plan.date}:${metLevel}:${exposure}`}
+              key={`${plan.site.id}:${plan.date}:${metLevel}:${exposure}:${workers}`}
               plan={plan}
             />
           </div>
@@ -288,80 +330,25 @@ export function Console({ initial }: { initial: ConsoleData }) {
           <Footer meta={meta} />
         </main>
       </div>
-    </div>
-  );
-}
-
-function Header({
-  meta,
-  scenario,
-  onScenario,
-}: {
-  meta: ConsoleData["meta"];
-  scenario: string;
-  onScenario: (s: "live" | "heatwave") => void;
-}) {
-  return (
-    <header className="border-b border-[var(--color-rule)] bg-[var(--color-paper-raised)]">
-      <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4 px-4 py-3.5 lg:px-5">
-        <div className="flex items-baseline gap-3.5">
-          <span className="font-[family-name:var(--font-display)] text-[21px] font-semibold tracking-[0.06em]">
-            KAVACH
-          </span>
-          <span className="hidden text-[12.5px] text-[var(--color-ink-muted)] sm:inline">
-            Can this crew work outdoors today?
-          </span>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <a
-            href="/how-it-works"
-            className="rounded-full border border-[var(--color-rule-strong)] px-3.5 py-1.5 text-[12.5px] text-[var(--color-ink-muted)] transition-colors hover:bg-[var(--color-paper-sunk)]"
-          >
-            How does this work?
-          </a>
-          <Segmented
-            label="Weather to plan against"
-            value={scenario as "live" | "heatwave"}
-            onChange={onScenario}
-            options={[
-              { value: "live", label: "Today", title: "Live SHRAM readings plus the 72-hour forecast" },
-              {
-                value: "heatwave",
-                label: "A May heatwave",
-                title: "A real recorded peak-summer day, not invented data",
-              },
-            ]}
-          />
-          <Pill tone={meta.stale ? "warn" : "ok"}>
-            <span
-              aria-hidden
-              className="inline-block h-1.5 w-1.5 rounded-full"
-              style={{
-                background: meta.stale
-                  ? "var(--color-danger)"
-                  : "var(--color-safe)",
-              }}
-            />
-            {meta.stale ? "saved copy" : "live data"} · {meta.totalStations} stations
-          </Pill>
-        </div>
-      </div>
-    </header>
+    </Chrome>
   );
 }
 
 function Controls({
   metLevel,
   exposure,
+  workers,
   onMet,
   onExposure,
+  onWorkers,
   pending,
 }: {
   metLevel: MetLevel;
   exposure: SunExposure;
+  workers: number;
   onMet: (m: MetLevel) => void;
   onExposure: (e: SunExposure) => void;
+  onWorkers: (n: number) => void;
   pending: boolean;
 }) {
   return (
@@ -400,6 +387,24 @@ function Controls({
             { value: "shade" as SunExposure, label: "Shade" },
           ]}
         />
+        <div className="flex flex-col gap-1.5">
+          <span className="label">Crew size</span>
+          <input
+            type="number"
+            min={1}
+            max={500}
+            value={workers}
+            disabled={pending}
+            onChange={(e) => {
+              const n = Number(e.target.value);
+              if (Number.isFinite(n) && n >= 1 && n <= 500) onWorkers(Math.round(n));
+            }}
+            className="tnum w-[88px] rounded-full border border-[var(--color-rule-strong)] bg-[var(--color-paper-raised)] px-3 py-1.5 text-[12px] outline-none disabled:opacity-40"
+          />
+          <span className="text-[11px] leading-snug text-[var(--color-ink-faint)]">
+            {workers} workers on site
+          </span>
+        </div>
         {pending && (
           <span className="self-center text-[12px] text-[var(--color-ink-faint)]">
             recalculating…

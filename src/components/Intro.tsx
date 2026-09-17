@@ -19,7 +19,7 @@ const STEPS = [
   {
     n: 1,
     title: "Pick a work site",
-    body: "Three real Pune sites are registered. Each one has its own location, crew size and type of work.",
+    body: "Registered Pune sites, each with its own location, crew size and type of work.",
   },
   {
     n: 2,

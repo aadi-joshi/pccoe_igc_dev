@@ -2,9 +2,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { GLOSSARY } from "@/lib/glossary";
 import { ZONES } from "@/lib/zones";
+import { Chrome } from "@/components/Chrome";
 
 export const metadata: Metadata = {
-  title: "How KAVACH works",
+  title: "How it works",
   description:
     "A plain-English explanation of how KAVACH turns heat forecasts into a work schedule.",
 };
@@ -62,29 +63,15 @@ const STAGES = [
     title: "Say it in a language the supervisor uses",
     lede: "A plan written in English on a dashboard nobody opens is not a plan.",
     body: [
-      "The finished schedule is turned into a short spoken briefing in Marathi, Hindi or English, and read aloud. In real deployment it would arrive as an SMS or a phone call.",
-      "An AI model writes those sentences — but only the sentences. Every time, temperature and quantity was calculated before the model was involved. You can switch the model off in the console and watch the schedule stay exactly the same. That is deliberate: a language model should not be able to make a work shift unsafe.",
+      "The finished schedule is turned into a short spoken briefing in Marathi, Hindi or English, and read aloud. It is sent to the supervisor's phone; they confirm, and the municipal ledger records it.",
+      "The briefing only uses times, temperatures and water volumes the engines already calculated. It cannot invent a work window or change a safety limit.",
     ],
   },
 ];
 
 export default function HowItWorksPage() {
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-[var(--color-rule)] bg-[var(--color-paper-raised)]">
-        <div className="mx-auto flex max-w-[860px] flex-wrap items-center justify-between gap-4 px-5 py-3.5">
-          <Link href="/" className="font-[family-name:var(--font-display)] text-[20px] font-semibold tracking-[0.05em]">
-            KAVACH
-          </Link>
-          <Link
-            href="/"
-            className="rounded-full border border-[var(--color-rule-strong)] px-3.5 py-1.5 text-[12.5px] text-[var(--color-ink-muted)] transition-colors hover:bg-[var(--color-paper-sunk)]"
-          >
-            Back to the console
-          </Link>
-        </div>
-      </header>
-
+    <Chrome wide={false}>
       <main className="mx-auto max-w-[860px] px-5 py-10">
         <h1 className="font-[family-name:var(--font-display)] text-[34px] leading-tight sm:text-[40px]">
           How KAVACH works
@@ -207,7 +194,7 @@ export default function HowItWorksPage() {
 
         <footer className="mt-12 border-t border-[var(--color-rule)] pt-6">
           <Link
-            href="/"
+            href="/console"
             className="inline-flex items-center rounded-full bg-[var(--color-ink)] px-4 py-2 text-[13px] font-medium text-[var(--color-paper)] transition-opacity hover:opacity-85"
           >
             Open the console
@@ -219,7 +206,7 @@ export default function HowItWorksPage() {
           </p>
         </footer>
       </main>
-    </div>
+    </Chrome>
   );
 }
 
@@ -241,6 +228,6 @@ const TERM_TITLES: Record<string, string> = {
   standDown: "Stand-down",
   shram: "SHRAM",
   unmanaged: "A normal day",
-  nugen: "The AI model",
+  briefing: "The briefing",
   meanRadiant: "Radiant heat",
 };

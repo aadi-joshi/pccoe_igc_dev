@@ -1,18 +1,13 @@
 import type { Site } from "./types";
 
 /**
- * Pilot site registry.
- *
- * Three real Pune locations chosen so the downscaling engine visibly
- * disagrees with the nearest station in *different directions*. A dense
- * built-up construction site runs hot; a rural-fringe NREGA worksite sits
- * close to station values; a riverside vendor zone runs cooler than the
- * built-up case despite being in the city. That contrast is the evidence
- * the engine is doing something real rather than adding a constant.
- *
- * Land-cover profiles are derived from OpenStreetMap land use and built-up
- * footprint around each location.
+ * Pilot site registry — real Pune locations chosen so the downscaling
+ * engine disagrees with the nearest station in different directions.
+ * Dense built-up construction runs hot; a rural-fringe NREGA worksite sits
+ * close to station values; a street-canyon vendor zone traps radiant heat
+ * despite sitting in the city.
  */
+
 export const SITES: Site[] = [
   {
     id: "mag-007",
@@ -22,9 +17,10 @@ export const SITES: Site[] = [
     lat: 18.5159,
     lon: 73.9271,
     workers: 42,
-    metLevel: 6,
+    metLevel: 4,
     exposure: "sun",
     supervisor: "Rajesh Pawar",
+    phone: "+91 98220 11407",
     minDailyHours: 7,
     dailyWageInr: 650,
     profile: {
@@ -46,6 +42,7 @@ export const SITES: Site[] = [
     metLevel: 5,
     exposure: "sun",
     supervisor: "Sunita Kale",
+    phone: "+91 97631 88214",
     minDailyHours: 6,
     dailyWageInr: 297,
     profile: {
@@ -66,7 +63,8 @@ export const SITES: Site[] = [
     workers: 120,
     metLevel: 3,
     exposure: "sun",
-    supervisor: "Ward 14 Officer",
+    supervisor: "Anjali More",
+    phone: "+91 20 2550 1414",
     minDailyHours: 8,
     dailyWageInr: 420,
     profile: {
@@ -75,6 +73,50 @@ export const SITES: Site[] = [
       skyViewFactor: 0.42,
       surfaceAlbedo: "medium",
       distanceToWaterM: 700,
+    },
+  },
+  {
+    id: "hinj-tower-3",
+    name: "Hinjewadi Tower 3",
+    locality: "Hinjewadi Phase 1",
+    kind: "construction",
+    lat: 18.5912,
+    lon: 73.738,
+    workers: 55,
+    metLevel: 5,
+    exposure: "sun",
+    supervisor: "Vikram Deshmukh",
+    phone: "+91 98900 44128",
+    minDailyHours: 8,
+    dailyWageInr: 720,
+    profile: {
+      builtUpFraction: 0.74,
+      greenFraction: 0.12,
+      skyViewFactor: 0.71,
+      surfaceAlbedo: "dark",
+      distanceToWaterM: 2400,
+    },
+  },
+  {
+    id: "swargate-01",
+    name: "Swargate Market Stretch",
+    locality: "Swargate, Pune",
+    kind: "vendor",
+    lat: 18.5018,
+    lon: 73.8636,
+    workers: 86,
+    metLevel: 3,
+    exposure: "sun",
+    supervisor: "Meena Shaikh",
+    phone: "+91 99229 77301",
+    minDailyHours: 8,
+    dailyWageInr: 380,
+    profile: {
+      builtUpFraction: 0.88,
+      greenFraction: 0.04,
+      skyViewFactor: 0.36,
+      surfaceAlbedo: "dark",
+      distanceToWaterM: 1100,
     },
   },
 ];

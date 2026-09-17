@@ -21,9 +21,13 @@ const plexSerif = IBM_Plex_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "KAVACH — Occupational Heat Decision Engine",
+  title: {
+    default: "KAVACH — Occupational Heat Decision Engine",
+    template: "%s — KAVACH",
+  },
   description:
     "Turns district heat forecasts into a defensible shift plan for a specific work site, by simulating what the day will do to a worker's body.",
+  applicationName: "KAVACH",
 };
 
 export const viewport: Viewport = {

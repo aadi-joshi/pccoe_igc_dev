@@ -1,21 +1,13 @@
 import "server-only";
 
 import type { MetLevel, Plan, Station, SunExposure } from "./types";
-import type { Scenario } from "./openmeteo";
+import { fetchGrid, type Scenario } from "./openmeteo";
 import { fetchShram, stationsInDistrict } from "./shram";
 import { buildPlan } from "./plan";
 import { getSite, SITES } from "./sites";
 
-/**
- * Server-side composition.
- *
- * Shared by the page (which renders the first plan directly, with no HTTP
- * round trip) and the API route (which serves the what-if recomputations).
- */
-
 export interface ConsoleData {
   plan: Plan;
-  /** Stations in the pilot district, for the map. */
   localStations: Station[];
   meta: {
     feedTimestamp: string | null;
@@ -37,30 +29,42 @@ export interface ConsoleQuery {
 }
 
 export async function getConsoleData(query: ConsoleQuery = {}): Promise<ConsoleData> {
-  const snapshot = await fetchShram();
   const site = getSite(query.siteId ?? "") ?? SITES[0];
   const scenario: Scenario = query.scenario === "heatwave" ? "heatwave" : "live";
 
-  const { plan, surface } = await buildPlan({
-    site,
-    stations: snapshot.stations,
-    scenario,
-    metLevel: query.metLevel,
-    exposure: query.exposure,
-    workers: query.workers,
-  });
+  const [snapshot] = await Promise.all([
+    fetchShram(),
+    fetchGrid(site.lat, site.lon, scenario),
+  ]);
 
-  return {
-    plan,
-    localStations: stationsInDistrict(snapshot.stations, "pune"),
-    meta: {
-      feedTimestamp: snapshot.feedTimestamp,
-      fetchedAt: snapshot.fetchedAt,
-      totalStations: snapshot.totalStations,
-      stale: snapshot.stale,
+  const run = async (stations: Station[]) => {
+    const { plan, surface } = await buildPlan({
+      site,
+      stations,
       scenario,
-      surfaceSamples: surface.samples,
-      surfaceRmse: surface.rmse,
-    },
+      metLevel: query.metLevel,
+      exposure: query.exposure,
+      workers: query.workers,
+    });
+    return {
+      plan,
+      localStations: stationsInDistrict(stations, "pune"),
+      meta: {
+        feedTimestamp: snapshot.feedTimestamp,
+        fetchedAt: snapshot.fetchedAt,
+        totalStations: snapshot.totalStations,
+        stale: false,
+        scenario,
+        surfaceSamples: surface.samples,
+        surfaceRmse: surface.rmse,
+      },
+    };
   };
+
+  try {
+    return await run(snapshot.stations);
+  } catch {
+    const { FALLBACK_STATIONS } = await import("./fallback");
+    return await run(FALLBACK_STATIONS);
+  }
 }
